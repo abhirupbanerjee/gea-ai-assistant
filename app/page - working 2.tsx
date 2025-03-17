@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
-import { motion } from "framer-motion";
 
 // Environment variables
 const ASSISTANT_ID = process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_ID;
@@ -114,68 +113,58 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col items-center bg-white">
-      {/* Header with Custom Icon */}
-      <header className="flex items-center justify-center w-full p-4 bg-white shadow-md">
-        <img src="/gea-icon.png" alt="GEA Icon" className="h-16 w-16" />
-        <h2 className="text-2xl font-bold ml-2">GEA AI Assistant</h2>
-      </header>
+    <div className="max-w-lg mx-auto p-4 bg-white shadow-md rounded-lg">
+      {/* Updated Header with Custom Icon */}
+      <h2 className="text-xl font-bold text-center flex items-center justify-center gap-2">
+        <img src="/gea-icon.png" alt="GEA Icon" className="h-6 w-6" /> 
+        GEA AI Assistant
+      </h2>
 
-      {/* Chat Container - Full Page, Resizable */}
-      <div className="flex-grow w-full max-w-4xl p-4">
-        <div
-          ref={chatContainerRef}
-          className="h-[70vh] sm:h-[75vh] overflow-y-auto border p-3 space-y-2 bg-white shadow rounded-lg"
-        >
-          {messages.map((msg, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className={`p-3 rounded-md ${
-                msg.role === "user" ? "bg-gray-200 text-black" : "bg-white text-black border"
-              }`}
-            >
-              <b>{msg.role === "user" ? "You" : "GEA AI Assistant"}:</b>
-              <div className="prose max-w-none">
-                <ReactMarkdown>{msg.content}</ReactMarkdown>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      <div ref={chatContainerRef} className="h-80 overflow-y-auto border p-3 space-y-2 bg-gray-100 rounded">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`p-2 rounded-md ${
+              msg.role === "user" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+            }`}
+          >
+            <b>{msg.role === "user" ? "You" : "GEA AI Assistant"}:</b>
+            <div className="prose max-w-none">
+              <ReactMarkdown>{msg.content}</ReactMarkdown>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Input & Buttons - Responsive */}
-      <div className="w-full max-w-4xl p-4 flex flex-col gap-2">
-        <div className="flex flex-col sm:flex-row items-center gap-2">
-          <input
-            className="border rounded p-3 w-full sm:w-4/5 focus:ring focus:ring-blue-300"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message..."
-          />
-          <button
-            className="bg-blue-500 text-white p-3 rounded w-full sm:w-1/5 hover:bg-blue-600 transition"
-            onClick={sendMessage}
-            disabled={loading}
-          >
-            {loading ? "..." : "Send"}
-          </button>
-        </div>
+      {loading && <p className="text-gray-500 text-center">Thinking...</p>}
 
+      <div className="flex items-center gap-2 mt-2">
+        <input
+          className="border rounded p-2 w-full focus:ring focus:ring-blue-200"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Type a message..."
+        />
         <button
-          className="bg-red-500 text-white p-3 rounded w-full hover:bg-red-600 transition"
-          onClick={() => {
-            setMessages([]);
-            setThreadId(null);
-            localStorage.removeItem("chatHistory");
-            localStorage.removeItem("threadId");
-          }}
+          className="bg-blue-500 text-white p-2 rounded w-20 hover:bg-blue-600 transition"
+          onClick={sendMessage}
+          disabled={loading}
         >
-          Clear Chat
+          {loading ? "..." : "Send"}
         </button>
       </div>
+
+      <button
+        className="bg-red-500 text-white p-2 rounded mt-2 w-full hover:bg-red-600 transition"
+        onClick={() => {
+          setMessages([]);
+          setThreadId(null);
+          localStorage.removeItem("chatHistory");
+          localStorage.removeItem("threadId");
+        }}
+      >
+        Clear Chat
+      </button>
     </div>
   );
 }
