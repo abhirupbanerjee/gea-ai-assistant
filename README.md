@@ -1,25 +1,101 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# GEA Chatbot
 
-First, run the development server:
+A Next.js-based AI assistant web application.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Installation
+
+Clone the repository and install dependencies:
+
+```sh
+git clone <your-repo-url>
+cd gea-chatbot
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Dependencies
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All dependencies are managed via [`package.json`](package.json).  
+**Main dependencies:**
+- `next`
+- `react`
+- `react-dom`
+- `axios`
+- `framer-motion`
+- `jspdf`
+- `react-markdown`
+- `remark-gfm`
+- `html2canvas`
+- `@tailwindcss/postcss`
+- `tailwindcss`
+- `typescript`
 
+Install all dependencies with:
+
+```sh
+npm install
+```
+
+> **Note:**  
+> This project does **not** use Python or Python models. All AI interactions are handled via the OpenAI API using JavaScript/TypeScript.
+
+---
+
+## Running Locally
+
+Start the development server:
+
+```sh
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## Building the Project
+
+To build for production:
+
+```sh
+npm run build
+```
+
+The static export will be in the `out/` directory.
+
+---
+
+## Deployment
+
+Deploy to Cloudflare Pages using Wrangler:
+
+```sh
+npm run deploy
+```
+
+---
+
+## Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```
+NEXT_PUBLIC_OPENAI_ASSISTANT_ID=your-assistant-id
+NEXT_PUBLIC_OPENAI_API_KEY=your-openai-api-key
+NEXT_PUBLIC_OPENAI_ORGANIZATION=your-openai-org-id (optional)
+NEXT_PUBLIC_ADMIN_USERS_JSON=[{"email":"admin@example.com","password":"yourpassword"}]
+```
+
+---
+
+## License
+
+See [LICENSE](LICENSE).
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
