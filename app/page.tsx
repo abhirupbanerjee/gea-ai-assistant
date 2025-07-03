@@ -2,15 +2,10 @@
 
 // Import necessary libraries and modules
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import remarkGfm from "remark-gfm";
 
-// Environment Variables for API Access
-const ASSISTANT_ID = process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_ID;
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-const OPENAI_ORGANIZATION = process.env.NEXT_PUBLIC_OPENAI_ORGANIZATION;
 
 // Define Message type
 interface Message {
@@ -60,78 +55,23 @@ const ChatApp = () => {
     const userInput = input;
     setInput("");
 
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-      "OpenAI-Beta": "assistants=v2",
-    };
-    if (OPENAI_ORGANIZATION) {
-      headers["OpenAI-Organization"] = OPENAI_ORGANIZATION;
-    }
-
     try {
-      if (!ASSISTANT_ID) throw new Error("Missing OpenAI Assistant ID");
-
       let currentThreadId = threadId;
-      if (!currentThreadId) {
-        const threadRes = await axios.post(
-          "https://api.openai.com/v1/threads",
-          {},
-          { headers }
-        );
-        currentThreadId = threadRes.data.id;
+      setTyping(true);
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userInput, threadId: currentThreadId }),
+      });
+
+      const data = await res.json();
+      currentThreadId = data.threadId;
+      if (currentThreadId) {
         setThreadId(currentThreadId);
       }
 
-      await axios.post(
-        `https://api.openai.com/v1/threads/${currentThreadId}/messages`,
-        { role: "user", content: userInput },
-        { headers }
-      );
-
-      const runRes = await axios.post(
-        `https://api.openai.com/v1/threads/${currentThreadId}/runs`,
-        { assistant_id: ASSISTANT_ID },
-        { headers }
-      );
-
-      const runId = runRes.data.id;
-	  
-	 // 🔁 NEW: Trigger backend to handle tool calls
-	await fetch("/api/assistants/tool-handler", {
-	method: "POST",
-	headers: { "Content-Type": "application/json" },
-	body: JSON.stringify({ thread_id: currentThreadId, run_id: runId })
-	});
-	  
-	  
-      let status = "in_progress";
-      let retries = 0;
-      const maxRetries = 10;
-
-      setTyping(true);
-
-      while ((status === "in_progress" || status === "queued") && retries < maxRetries) {
-        await new Promise((res) => setTimeout(res, 2000));
-        const statusRes = await axios.get(
-          `https://api.openai.com/v1/threads/${currentThreadId}/runs/${runId}`,
-          { headers }
-        );
-        status = statusRes.data.status;
-        retries++;
-      }
-
-      let reply = "No response received.";
-      if (status === "completed") {
-        const messagesRes = await axios.get(
-          `https://api.openai.com/v1/threads/${currentThreadId}/messages`,
-          { headers }
-        );
-        const assistantMsg = messagesRes.data.data.find((m: any) => m.role === "assistant");
-        reply =
-          assistantMsg?.content?.[0]?.text?.value?.replace(/【\d+:\d+†[^】]+】/g, "") ||
-          "No valid response.";
-      }
+      let reply = data.reply || "No response received.";
 
       setMessages((prev) => [
         ...prev,

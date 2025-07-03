@@ -13,28 +13,25 @@ export default function LoginPage() {
 
 
   // ✅ Function to handle login logic
-  const login = () => {
+  const login = async () => {
     try {
-      // ✅ Get user credentials JSON string from environment variable
-      const raw = process.env.NEXT_PUBLIC_ADMIN_USERS_JSON;
-      const users = JSON.parse(raw || "[]"); // Fallback to empty list if not defined
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // ✅ Validate entered email/password against allowed users
-      const isValidUser = users.some((user: { email: string; password: string }) =>
-        user.email === email && user.password === password
-      );
+      if (res.ok) {
+        const now = Date.now();
 
-      if (isValidUser) {
-    	const now = Date.now(); // Current time in milliseconds
-  		
-		// ✅ Save session flag (persistent if "Remember Me" is checked)
-      if (rememberMe) {
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("loginTimestamp", now.toString());
-      } else {
-        sessionStorage.setItem("isLoggedIn", "true");
-        sessionStorage.setItem("loginTimestamp", now.toString());
-      }
+        // ✅ Save session flag (persistent if "Remember Me" is checked)
+        if (rememberMe) {
+          localStorage.setItem("isLoggedIn", "true");
+          localStorage.setItem("loginTimestamp", now.toString());
+        } else {
+          sessionStorage.setItem("isLoggedIn", "true");
+          sessionStorage.setItem("loginTimestamp", now.toString());
+        }
 
         // ✅ Redirect to ChatApp page ("/")
         router.push("/");
@@ -43,7 +40,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       alert("Error validating login");
-      console.error("Login parsing error:", err); // ✅ Log error for debugging
+      console.error("Login API error:", err);
     }
   };
 
