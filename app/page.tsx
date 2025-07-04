@@ -2,15 +2,9 @@
 
 // Import necessary libraries and modules
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import remarkGfm from "remark-gfm";
-
-// Environment Variables for API Access
-const ASSISTANT_ID = process.env.NEXT_PUBLIC_OPENAI_ASSISTANT_ID;
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-const OPENAI_ORGANIZATION = process.env.NEXT_PUBLIC_OPENAI_ORGANIZATION;
 
 // Define Message type
 interface Message {
@@ -30,6 +24,24 @@ const ChatApp = () => {
   const [typing, setTyping] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  // Load chat history from localStorage on component mount
+  useEffect(() => {
+    const savedMessages = localStorage.getItem("chatHistory");
+    const savedThreadId = localStorage.getItem("threadId");
+    
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (error) {
+        console.error("Error parsing saved messages:", error);
+      }
+    }
+    
+    if (savedThreadId) {
+      setThreadId(savedThreadId);
+    }
+  }, []);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     chatContainerRef.current?.scrollTo({
@@ -45,114 +57,94 @@ const ChatApp = () => {
   }, [messages, threadId]);
 
   // Function to send user message and receive assistant response
-  const sendMessage = async () => {
-    if (activeRun || !input.trim()) return;
+// Replace your sendMessage function with this version
+const sendMessage = async () => {
+  if (activeRun || !input.trim()) return;
 
-    setActiveRun(true);
-    setLoading(true);
+  setActiveRun(true);
+  setLoading(true);
 
-    const userMessage = {
-      role: "user",
-      content: input,
-      timestamp: new Date().toLocaleString(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    const userInput = input;
-    setInput("");
-
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-      "OpenAI-Beta": "assistants=v2",
-    };
-    if (OPENAI_ORGANIZATION) {
-      headers["OpenAI-Organization"] = OPENAI_ORGANIZATION;
-    }
-
-    try {
-      if (!ASSISTANT_ID) throw new Error("Missing OpenAI Assistant ID");
-
-      let currentThreadId = threadId;
-      if (!currentThreadId) {
-        const threadRes = await axios.post(
-          "https://api.openai.com/v1/threads",
-          {},
-          { headers }
-        );
-        currentThreadId = threadRes.data.id;
-        setThreadId(currentThreadId);
-      }
-
-      await axios.post(
-        `https://api.openai.com/v1/threads/${currentThreadId}/messages`,
-        { role: "user", content: userInput },
-        { headers }
-      );
-
-      const runRes = await axios.post(
-        `https://api.openai.com/v1/threads/${currentThreadId}/runs`,
-        { assistant_id: ASSISTANT_ID },
-        { headers }
-      );
-
-      const runId = runRes.data.id;
-	  
-	 // 🔁 NEW: Trigger backend to handle tool calls
-	await fetch("/api/assistants/tool-handler", {
-	method: "POST",
-	headers: { "Content-Type": "application/json" },
-	body: JSON.stringify({ thread_id: currentThreadId, run_id: runId })
-	});
-	  
-	  
-      let status = "in_progress";
-      let retries = 0;
-      const maxRetries = 10;
-
-      setTyping(true);
-
-      while ((status === "in_progress" || status === "queued") && retries < maxRetries) {
-        await new Promise((res) => setTimeout(res, 2000));
-        const statusRes = await axios.get(
-          `https://api.openai.com/v1/threads/${currentThreadId}/runs/${runId}`,
-          { headers }
-        );
-        status = statusRes.data.status;
-        retries++;
-      }
-
-      let reply = "No response received.";
-      if (status === "completed") {
-        const messagesRes = await axios.get(
-          `https://api.openai.com/v1/threads/${currentThreadId}/messages`,
-          { headers }
-        );
-        const assistantMsg = messagesRes.data.data.find((m: any) => m.role === "assistant");
-        reply =
-          assistantMsg?.content?.[0]?.text?.value?.replace(/【\d+:\d+†[^】]+】/g, "") ||
-          "No valid response.";
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: reply, timestamp: new Date().toLocaleString() },
-      ]);
-    } catch (err: any) {
-      console.error("Error:", err.response?.data || err.message);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `Error: ${err.response?.data?.error?.message || "Unable to reach assistant."}`,
-          timestamp: new Date().toLocaleString(),
-        },
-      ]);
-    } finally {
-      setTyping(false);
-      setLoading(false);
-      setActiveRun(false);
-    }
+  const userMessage = {
+    role: "user",
+    content: input,
+    timestamp: new Date().toLocaleString(),
   };
+  setMessages((prev) => [...prev, userMessage]);
+  const userInput = input;
+  setInput("");
+
+  try {
+    setTyping(true);
+
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: userInput,
+        threadId: threadId,
+      }),
+    });
+
+    // Check if response is ok first
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Get the response as text first to check if it's empty
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', responseText);
+      throw new Error('Invalid JSON response from server');
+    }
+
+    // Check if the parsed data has an error
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    // Update thread ID if we got a new one
+    if (data.threadId && data.threadId !== threadId) {
+      setThreadId(data.threadId);
+    }
+
+    // Add assistant response to messages
+    setMessages((prev) => [
+      ...prev,
+      { 
+        role: "assistant", 
+        content: data.reply || "No response received", 
+        timestamp: new Date().toLocaleString() 
+      },
+    ]);
+
+  } catch (error: any) {
+    console.error("Error:", error);
+    
+    let errorMessage = "Unable to reach assistant.";
+    
+    if (error.message) {
+      errorMessage = error.message;
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: `Error: ${errorMessage}`,
+        timestamp: new Date().toLocaleString(),
+      },
+    ]);
+  } finally {
+    setTyping(false);
+    setLoading(false);
+    setActiveRun(false);
+  }
+};
 
   // Copy chat to clipboard
   const copyChatToClipboard = async () => {
@@ -164,6 +156,7 @@ const ChatApp = () => {
       alert("Chat copied to clipboard!");
     } catch (err) {
       console.error("Failed to copy chat: ", err);
+      alert("Failed to copy chat to clipboard.");
     }
   };
 
@@ -277,6 +270,7 @@ const ChatApp = () => {
               setMessages([]);
               setThreadId(null);
               localStorage.removeItem("threadId");
+              localStorage.removeItem("chatHistory");
             }}
           >
             Clear Chat
