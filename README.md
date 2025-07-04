@@ -82,15 +82,14 @@ npm run deploy
 
 ## Environment Variables
 
-Create a `.env.local` file with the following variables:
-
+Create a `.env` file with the following variables:
+Note: declaring NEXT_PUBLIC_* makes these vars available on public domain aincluding your secret api keys. use this method for local testing only. 
 ```
 NEXT_PUBLIC_OPENAI_ASSISTANT_ID=your-assistant-id
 NEXT_PUBLIC_OPENAI_API_KEY=your-openai-api-key
 NEXT_PUBLIC_OPENAI_ORGANIZATION=your-openai-org-id (optional)
 NEXT_PUBLIC_ADMIN_USERS_JSON=[{"email":"admin@example.com","password":"yourpassword"}]
 ```
-
 ---
 
 ## License
