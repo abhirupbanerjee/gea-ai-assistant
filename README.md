@@ -82,7 +82,7 @@ npm run deploy
 
 ## Environment Variables
 
-Create a `.env.local` file with the following variables:
+Create a `.env` file with the following variables:
 
 ```
 OPENAI_ASSISTANT_ID=your-assistant-id
@@ -91,7 +91,7 @@ OPENAI_ORGANIZATION=your-openai-org-id (optional)
 ADMIN_USERS_JSON=[{"email":"admin@example.com","password":"yourpassword"}]
 ```
 
-When deploying to Cloudflare Pages, set the same variables in your project
+When deploying to Vercel, set the same variables in your project
 settings so they remain server-only.
 
 ---
@@ -112,4 +112,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+vercel --prod
+(select your existing repository and version)
+
