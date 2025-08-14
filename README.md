@@ -1,4 +1,4 @@
-# GEA Chatbot
+# Digital Strategy Bot
 
 A Next.js-based AI assistant web application powered by OpenAI, optimized for seamless deployment and modern web standards.
 
@@ -22,7 +22,7 @@ Clone the repository and install dependencies:
 
 ```sh
 git clone <your-repo-url>
-cd gea-ai-assistant
+cd digital-strategy
 npm install
 ```
 
