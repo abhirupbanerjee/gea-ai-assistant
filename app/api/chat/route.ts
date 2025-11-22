@@ -141,8 +141,17 @@ export async function POST(request: NextRequest) {
         );
         
         const assistantMsg = messagesRes.data.data.find((m: any) => m.role === 'assistant');
-        reply = assistantMsg?.content?.[0]?.text?.value?.replace(/【\d+:\d+†[^】]+】/g, '') || 'No valid response.';
-        console.log('Reply extracted successfully');
+        let rawReply = assistantMsg?.content?.[0]?.text?.value || 'No valid response.';
+
+        // Clean up OpenAI citations and references
+        reply = rawReply
+          .replace(/【\d+:\d+†[^】]+】/g, '') // Remove citation markers like 【4:0†source】
+          .replace(/\n\nReferences:[\s\S]*$/g, '') // Remove "References:" section at the end
+          .replace(/^```[\s\S]*?\n([\s\S]*)\n```$/g, '$1') // Remove outer code fences if entire response is wrapped
+          .replace(/^```\n?([\s\S]*?)\n?```$/g, '$1') // Alternative pattern for code fence wrapping
+          .trim();
+
+        console.log('Reply extracted and cleaned successfully');
       } catch (error: any) {
         console.error('Failed to fetch messages:', error.response?.data || error.message);
         reply = 'Failed to fetch response.';

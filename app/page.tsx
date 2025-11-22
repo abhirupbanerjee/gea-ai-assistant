@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import remarkGfm from "remark-gfm";
+import { User, Bot, Copy, Check, ExternalLink, Send, Trash2, ClipboardCopy } from "lucide-react";
 
 // Define Message type
 interface Message {
@@ -22,21 +23,28 @@ const ChatApp = () => {
   const [loading, setLoading] = useState(false);
   const [activeRun, setActiveRun] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [showWelcome, setShowWelcome] = useState(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Load chat history from localStorage on component mount
   useEffect(() => {
     const savedMessages = localStorage.getItem("chatHistory");
     const savedThreadId = localStorage.getItem("threadId");
-    
+
     if (savedMessages) {
       try {
-        setMessages(JSON.parse(savedMessages));
+        const parsedMessages = JSON.parse(savedMessages);
+        setMessages(parsedMessages);
+        // Hide welcome if there are existing messages
+        if (parsedMessages.length > 0) {
+          setShowWelcome(false);
+        }
       } catch (error) {
         console.error("Error parsing saved messages:", error);
       }
     }
-    
+
     if (savedThreadId) {
       setThreadId(savedThreadId);
     }
@@ -60,6 +68,11 @@ const ChatApp = () => {
 // Replace your sendMessage function with this version
 const sendMessage = async () => {
   if (activeRun || !input.trim()) return;
+
+  // Hide welcome screen on first message
+  if (showWelcome) {
+    setShowWelcome(false);
+  }
 
   setActiveRun(true);
   setLoading(true);
@@ -146,6 +159,17 @@ const sendMessage = async () => {
   }
 };
 
+  // Copy individual message to clipboard
+  const copyMessageToClipboard = async (content: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000); // Show checkmark for 2s
+    } catch (err) {
+      console.error("Failed to copy message: ", err);
+    }
+  };
+
   // Copy chat to clipboard
   const copyChatToClipboard = async () => {
     const chatText = messages
@@ -174,56 +198,280 @@ const sendMessage = async () => {
           ref={chatContainerRef}
           className="flex-grow overflow-y-auto border p-3 space-y-4 bg-white shadow rounded-lg h-[65vh] sm:h-[70vh]"
         >
-          {messages.map((msg, index) => (
-            <motion.div key={index}>
-              <p className="font-bold mb-1">
-                {msg.role === "user" ? "You" : "Grenada AI Assistant"}{" "}
-                {msg.timestamp && (
-                  <span className="text-xs text-gray-500">({msg.timestamp})</span>
-                )}
+          {/* Welcome Screen */}
+          {showWelcome && messages.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col items-center justify-center h-full p-6"
+            >
+              {/* Welcome Icon */}
+              <div className="mb-6">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <Bot className="w-12 h-12 text-white" />
+                </div>
+              </div>
+
+              {/* Welcome Message */}
+              <div className="text-center max-w-2xl mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+                  Welcome to Grenada Enterprise Architecture AI Assistant
+                </h2>
+                <p className="text-gray-600 text-lg mb-6">
+                  I can help you learn about Grenada's digital transformation journey
+                </p>
+              </div>
+
+              {/* Topic Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl mb-8">
+                {/* Enterprise Architecture Card */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-bold text-lg">EA</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-lg">Enterprise Architecture</h3>
+                      <p className="text-gray-700 text-sm mt-1">
+                        Framework, maturity model, and EA policy
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        setInput("Explain the Grenada Enterprise Architecture framework");
+                        setShowWelcome(false);
+                      }}
+                      className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 rounded border border-blue-200 text-sm text-gray-800 transition-colors"
+                    >
+                      → Explain the EA framework
+                    </button>
+                    <button
+                      onClick={() => {
+                        setInput("What is the eGovernment Maturity Model and its levels?");
+                        setShowWelcome(false);
+                      }}
+                      className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 rounded border border-blue-200 text-sm text-gray-800 transition-colors"
+                    >
+                      → eGovernment Maturity Model
+                    </button>
+                    <button
+                      onClick={() => {
+                        setInput("Explain the Grenada EA Policy in simple terms");
+                        setShowWelcome(false);
+                      }}
+                      className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 rounded border border-blue-200 text-sm text-gray-800 transition-colors"
+                    >
+                      → EA Policy overview
+                    </button>
+                  </div>
+                </div>
+
+                {/* DTA Card */}
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-bold text-sm">DTA</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-lg">Digital Transformation Agency</h3>
+                      <p className="text-gray-700 text-sm mt-1">
+                        Structure, services, and implementation
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        setInput("Explain the rationale for establishing DTA");
+                        setShowWelcome(false);
+                      }}
+                      className="w-full text-left px-3 py-2 bg-white hover:bg-emerald-50 rounded border border-emerald-200 text-sm text-gray-800 transition-colors"
+                    >
+                      → Why establish DTA?
+                    </button>
+                    <button
+                      onClick={() => {
+                        setInput("What is the organisation structure for DTA?");
+                        setShowWelcome(false);
+                      }}
+                      className="w-full text-left px-3 py-2 bg-white hover:bg-emerald-50 rounded border border-emerald-200 text-sm text-gray-800 transition-colors"
+                    >
+                      → DTA organisation structure
+                    </button>
+                    <button
+                      onClick={() => {
+                        setInput("What are the key services proposed to be delivered by DTA?");
+                        setShowWelcome(false);
+                      }}
+                      className="w-full text-left px-3 py-2 bg-white hover:bg-emerald-50 rounded border border-emerald-200 text-sm text-gray-800 transition-colors"
+                    >
+                      → Key DTA services
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Or Start Typing */}
+              <p className="text-gray-500 text-sm">
+                Or type your own question below to get started
               </p>
+            </motion.div>
+          )}
+
+          {/* Messages */}
+          {messages.map((msg, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="group"
+            >
+              {/* Message Header with Avatar */}
+              <div className="flex items-center gap-2 mb-2">
+                {/* Avatar */}
+                <div
+                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                    msg.role === "user"
+                      ? "bg-blue-500"
+                      : "bg-gradient-to-br from-green-500 to-emerald-600"
+                  }`}
+                >
+                  {msg.role === "user" ? (
+                    <User className="w-5 h-5 text-white" />
+                  ) : (
+                    <Bot className="w-5 h-5 text-white" />
+                  )}
+                </div>
+
+                {/* Name and Timestamp */}
+                <div className="flex-grow flex items-center justify-between">
+                  <span className="font-semibold text-gray-900">
+                    {msg.role === "user" ? "You" : "Grenada AI Assistant"}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {msg.timestamp && (
+                      <span className="text-xs text-gray-500">{msg.timestamp}</span>
+                    )}
+                    {/* Copy Button - Shows on hover */}
+                    <button
+                      onClick={() => copyMessageToClipboard(msg.content, index)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-gray-100 rounded"
+                      aria-label="Copy message"
+                    >
+                      {copiedIndex === index ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-gray-600" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message Content */}
               <div
-                className={`p-3 rounded-md ${
+                className={`p-4 rounded-lg ${
                   msg.role === "user"
-                    ? "bg-gray-200 text-black"
-                    : "bg-white text-black border"
+                    ? "bg-blue-50 border border-blue-100 ml-10"
+                    : "bg-white border border-gray-200 shadow-sm ml-10"
                 }`}
               >
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
+                    // Headers with proper hierarchy
                     h1: ({ ...props }) => (
-                      <h1 style={{ fontFamily: "'Segoe UI', sans-serif", fontSize: "1.75rem", fontWeight: "bold", margin: "1rem 0" }} {...props} />
+                      <h1 className="text-2xl font-bold mb-3 mt-4 first:mt-0 text-gray-900" {...props} />
                     ),
                     h2: ({ ...props }) => (
-                      <h2 style={{ fontFamily: "'Segoe UI', sans-serif", fontSize: "1.5rem", fontWeight: "bold", margin: "1rem 0" }} {...props} />
+                      <h2 className="text-xl font-bold mb-3 mt-3 first:mt-0 text-gray-900" {...props} />
                     ),
                     h3: ({ ...props }) => (
-                      <h3 style={{ fontFamily: "'Segoe UI', sans-serif", fontSize: "1.25rem", fontWeight: "bold", margin: "1rem 0" }} {...props} />
+                      <h3 className="text-lg font-semibold mb-2 mt-3 first:mt-0 text-gray-900" {...props} />
                     ),
-                    code: ({ ...props }) => (
-                      <code style={{ fontFamily: "'Segoe UI', sans-serif", background: "#f3f4f6", padding: "0.2rem 0.4rem", borderRadius: "4px" }} {...props} />
+                    h4: ({ ...props }) => (
+                      <h4 className="text-base font-semibold mb-2 mt-2 first:mt-0 text-gray-900" {...props} />
                     ),
-                    p: ({ node, ...props }) => (
-                      <p style={{ marginBottom: "0.75rem", lineHeight: "1.6", fontFamily: "'Segoe UI', sans-serif", fontSize: "16px" }} {...props} />
+
+                    // Code blocks - inline and block
+                    code: ({ node, inline, className, children, ...props }: any) => {
+                      // Check if it's inline code (inline prop is more reliable than className)
+                      if (inline) {
+                        return (
+                          <code className="bg-gray-100 text-red-600 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+                            {children}
+                          </code>
+                        );
+                      }
+                      // Block code
+                      return (
+                        <code className="block bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto text-sm font-mono my-2" {...props}>
+                          {children}
+                        </code>
+                      );
+                    },
+
+                    // Paragraphs with proper spacing
+                    p: ({ ...props }) => (
+                      <p className="mb-3 leading-relaxed text-gray-800 last:mb-0" {...props} />
                     ),
-                    ul: ({ node, ...props }) => (
-                      <ul style={{ listStyleType: "disc", paddingLeft: "1.5rem", marginBottom: "1rem" }} {...props} />
+
+                    // Lists
+                    ul: ({ ...props }) => (
+                      <ul className="list-disc pl-6 mb-3 space-y-1" {...props} />
                     ),
-                    ol: ({ node, ...props }) => (
-                      <ol style={{ listStyleType: "decimal", paddingLeft: "1.5rem", marginBottom: "1rem" }} {...props} />
+                    ol: ({ ...props }) => (
+                      <ol className="list-decimal pl-6 mb-3 space-y-1" {...props} />
                     ),
-                    li: ({ node, ...props }) => (
-                      <li style={{ marginBottom: "0.4rem" }} {...props} />
+                    li: ({ ...props }) => (
+                      <li className="text-gray-800 leading-relaxed" {...props} />
                     ),
-                    table: ({ node, ...props }) => (
-                      <table style={{ borderCollapse: "collapse", width: "100%", marginBottom: "1rem" }} {...props} />
+
+                    // Links with external indicator
+                    a: ({ href, children, ...props }) => (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1 group/link"
+                        {...props}
+                      >
+                        {children}
+                        <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                      </a>
                     ),
-                    th: ({ node, ...props }) => (
-                      <th style={{ border: "1px solid #ccc", background: "#f3f4f6", padding: "8px", textAlign: "left" }} {...props} />
+
+                    // Blockquotes
+                    blockquote: ({ ...props }) => (
+                      <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-3 italic text-gray-700 bg-gray-50 rounded-r" {...props} />
                     ),
-                    td: ({ node, ...props }) => (
-                      <td style={{ border: "1px solid #ccc", padding: "8px", textAlign: "left" }} {...props} />
+
+                    // Tables with responsive wrapper
+                    table: ({ ...props }) => (
+                      <div className="overflow-x-auto my-3">
+                        <table className="min-w-full border-collapse border border-gray-300" {...props} />
+                      </div>
+                    ),
+                    thead: ({ ...props }) => (
+                      <thead {...props} />
+                    ),
+                    tbody: ({ ...props }) => (
+                      <tbody {...props} />
+                    ),
+                    th: ({ ...props }) => (
+                      <th className="border border-gray-300 bg-gray-100 px-4 py-2 text-left font-semibold" {...props} />
+                    ),
+                    td: ({ ...props }) => (
+                      <td className="border border-gray-300 px-4 py-2" {...props} />
+                    ),
+
+                    // Horizontal rules
+                    hr: ({ ...props }) => (
+                      <hr className="my-4 border-gray-300" {...props} />
                     ),
                   }}
                 >
@@ -240,40 +488,59 @@ const sendMessage = async () => {
       </div>
 
       {/* Input & Controls */}
-      <div className="w-full max-w-4xl mx-auto p-4 flex flex-col gap-2">
-        <div className="flex flex-col sm:flex-row items-center gap-2">
+      <div className="w-full max-w-4xl mx-auto p-4 flex flex-col gap-3">
+        {/* Input Row */}
+        <div className="flex flex-col sm:flex-row items-stretch gap-2">
           <input
-            className="border rounded p-3 w-full sm:w-4/5"
+            className="flex-1 border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg px-4 py-3 outline-none transition-all"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Type a message..."
+            onKeyDown={(e) => e.key === "Enter" && !loading && sendMessage()}
+            placeholder="Type your question here..."
+            disabled={loading}
           />
           <button
-            className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded w-full sm:w-1/5"
+            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md sm:min-w-[120px]"
             onClick={sendMessage}
             disabled={loading}
           >
-            {loading ? "..." : "Send"}
+            {loading ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                <span>Sending...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                <span>Send</span>
+              </>
+            )}
           </button>
         </div>
+
+        {/* Action Buttons Row */}
         <div className="flex flex-col sm:flex-row gap-2">
           <button
-            className="bg-yellow-500 hover:bg-yellow-600 text-white p-3 rounded w-full"
+            className="flex-1 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
             onClick={copyChatToClipboard}
+            disabled={messages.length === 0}
           >
-            Copy Chat
+            <ClipboardCopy className="w-4 h-4" />
+            <span>Copy Chat</span>
           </button>
           <button
-            className="bg-red-400 hover:bg-red-500 text-white p-3 rounded w-full"
+            className="flex-1 bg-white hover:bg-red-50 border-2 border-gray-300 hover:border-red-400 text-gray-700 hover:text-red-600 px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
             onClick={() => {
               setMessages([]);
               setThreadId(null);
+              setShowWelcome(true);
               localStorage.removeItem("threadId");
               localStorage.removeItem("chatHistory");
             }}
+            disabled={messages.length === 0}
           >
-            Clear Chat
+            <Trash2 className="w-4 h-4" />
+            <span>Clear Chat</span>
           </button>
         </div>
       </div>
