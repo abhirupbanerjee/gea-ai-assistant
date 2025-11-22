@@ -193,11 +193,12 @@ const sendMessage = async () => {
       </header>
 
       {/* Chat Container */}
-      <div className="flex-grow w-full max-w-4xl mx-auto flex flex-col p-4">
+      <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 overflow-hidden">
         <div
           ref={chatContainerRef}
-          className="flex-grow overflow-y-auto border p-3 space-y-4 bg-white shadow rounded-lg h-[65vh] sm:h-[70vh]"
+          className="flex-1 overflow-y-auto border p-3 bg-white shadow rounded-lg"
         >
+          <div className="space-y-4">
           {/* Welcome Screen */}
           {showWelcome && messages.length === 0 && (
             <motion.div
@@ -484,6 +485,7 @@ const sendMessage = async () => {
           {typing && (
             <div className="text-gray-500 italic text-center p-2">Assistant is typing...</div>
           )}
+          </div>
         </div>
       </div>
 

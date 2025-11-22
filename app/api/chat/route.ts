@@ -147,9 +147,14 @@ export async function POST(request: NextRequest) {
         reply = rawReply
           .replace(/【\d+:\d+†[^】]+】/g, '') // Remove citation markers like 【4:0†source】
           .replace(/\n\nReferences:[\s\S]*$/g, '') // Remove "References:" section at the end
-          .replace(/^```[\s\S]*?\n([\s\S]*)\n```$/g, '$1') // Remove outer code fences if entire response is wrapped
-          .replace(/^```\n?([\s\S]*?)\n?```$/g, '$1') // Alternative pattern for code fence wrapping
           .trim();
+
+        // Remove code fences if entire response is wrapped in them
+        // Match: ```optional-language\ncontent\n```
+        const codeFencePattern = /^```[a-z]*\n([\s\S]*?)\n```$/;
+        if (codeFencePattern.test(reply)) {
+          reply = reply.replace(codeFencePattern, '$1').trim();
+        }
 
         console.log('Reply extracted and cleaned successfully');
       } catch (error: any) {
