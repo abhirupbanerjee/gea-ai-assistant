@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import remarkGfm from "remark-gfm";
 import { User, Bot, Copy, Check, ExternalLink, Send, Trash2, ClipboardCopy } from "lucide-react";
+import { usePageContext } from "@/hooks/usePageContext";
 
 // Define Message type
 interface Message {
@@ -19,50 +20,68 @@ const ChatApp = () => {
   // Define States
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [threadId, setThreadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeRun, setActiveRun] = useState(false);
   const [typing, setTyping] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
-  const [sourceUrl, setSourceUrl] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Capture source URL from parent page on mount
+  // Page Context Hook
+  const {
+    pageContext,
+    hasContext,
+    buildContextDescription,
+    getContextSummary,
+    getErrorMessage,
+    isEmbedded,
+    threadId,
+    setThreadId,
+    clearThreadId,
+  } = usePageContext();
+
+  // Show error message if origin validation failed
+  const errorMessage = getErrorMessage();
   useEffect(() => {
-    // Method 1: From URL parameter ?source=/feedback
-    const params = new URLSearchParams(window.location.search);
-    const source = params.get('source');
-
-    if (source) {
-      setSourceUrl(source);
-      console.log('[Chat] Source URL from parameter:', source);
-      return;
+    if (errorMessage && messages.length === 0) {
+      setMessages([{
+        role: 'assistant',
+        content: errorMessage,
+        timestamp: new Date().toLocaleTimeString(),
+      }]);
     }
+  }, [errorMessage]);
 
-    // Method 2: From referrer (when embedded in iframe)
-    if (document.referrer) {
-      try {
-        const referrerUrl = new URL(document.referrer);
-        // Only use referrer if it's from GEA Portal domains
-        if (
-          referrerUrl.hostname.includes('gea.abhirup.app') ||
-          referrerUrl.hostname.includes('gea.gov.gd') ||
-          referrerUrl.hostname === 'localhost'
-        ) {
-          setSourceUrl(referrerUrl.pathname);
-          console.log('[Chat] Source URL from referrer:', referrerUrl.pathname);
-        }
-      } catch (e) {
-        console.log('[Chat] Could not parse referrer');
+  // Welcome message based on context (only if no error)
+  useEffect(() => {
+    if (messages.length === 0 && !errorMessage) {
+      let welcomeMessage = "Hello! I'm the Grenada AI Assistant. How can I help you today?";
+
+      if (hasContext && pageContext?.route) {
+        const routeMessages: Record<string, string> = {
+          '/': "Welcome to the GEA Portal! I can help you navigate to feedback, grievances, or EA services.",
+          '/feedback': "I can help you submit feedback for government services. Just ask if you need guidance on any step!",
+          '/grievance': "I can help you file a grievance. Let me know if you have any questions about the process.",
+          '/admin/analytics': "I can help you understand the analytics dashboard. Ask me about any chart or metric!",
+          '/admin/grievances': "I can help you manage grievances. Ask me about status updates, priorities, or SLAs.",
+        };
+
+        welcomeMessage = routeMessages[pageContext.route] ||
+          `I see you're on ${pageContext.route}. How can I help you with this page?`;
       }
+
+      setMessages([{
+        role: 'assistant',
+        content: welcomeMessage,
+        timestamp: new Date().toLocaleTimeString(),
+      }]);
+      setShowWelcome(false); // Hide welcome screen after adding message
     }
-  }, []);
+  }, [hasContext, pageContext?.route, errorMessage, messages.length]);
 
   // Load chat history from localStorage on component mount
   useEffect(() => {
     const savedMessages = localStorage.getItem("chatHistory");
-    const savedThreadId = localStorage.getItem("threadId");
 
     if (savedMessages) {
       try {
@@ -76,10 +95,7 @@ const ChatApp = () => {
         console.error("Error parsing saved messages:", error);
       }
     }
-
-    if (savedThreadId) {
-      setThreadId(savedThreadId);
-    }
+    // Note: threadId is now managed by usePageContext hook
   }, []);
 
   // Scroll to bottom when messages change
@@ -90,48 +106,51 @@ const ChatApp = () => {
     });
   }, [messages]);
 
-  // Save chat history and thread ID in localStorage
+  // Save chat history in localStorage
   useEffect(() => {
     localStorage.setItem("chatHistory", JSON.stringify(messages));
-    if (threadId) localStorage.setItem("threadId", threadId);
-  }, [messages, threadId]);
+    // Note: threadId is now managed by usePageContext hook
+  }, [messages]);
 
   // Function to send user message and receive assistant response
-// Replace your sendMessage function with this version
-const sendMessage = async () => {
-  if (activeRun || !input.trim()) return;
+  const sendMessage = async () => {
+    if (activeRun || !input.trim()) return;
 
-  // Hide welcome screen on first message
-  if (showWelcome) {
-    setShowWelcome(false);
-  }
+    // Hide welcome screen on first message
+    if (showWelcome) {
+      setShowWelcome(false);
+    }
 
-  setActiveRun(true);
-  setLoading(true);
+    setActiveRun(true);
+    setLoading(true);
 
-  const userMessage = {
-    role: "user",
-    content: input,
-    timestamp: new Date().toLocaleString(),
-  };
-  setMessages((prev) => [...prev, userMessage]);
-  const userInput = input;
-  setInput("");
+    const userMessage = {
+      role: "user",
+      content: input,
+      timestamp: new Date().toLocaleString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    const userInput = input;
+    setInput("");
 
-  try {
-    setTyping(true);
+    try {
+      setTyping(true);
 
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: userInput,
-        threadId: threadId,
-        sourceUrl: sourceUrl,
-      }),
-    });
+      // Build context description
+      const contextDescription = buildContextDescription();
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userInput,
+          threadId: threadId,
+          contextDescription: hasContext ? contextDescription : undefined,
+          sourceUrl: pageContext?.route || null,
+        }),
+      });
 
     // Check if response is ok first
     if (!response.ok) {
@@ -186,11 +205,11 @@ const sendMessage = async () => {
       },
     ]);
   } finally {
-    setTyping(false);
-    setLoading(false);
-    setActiveRun(false);
-  }
-};
+      setTyping(false);
+      setLoading(false);
+      setActiveRun(false);
+    }
+  };
 
   // Copy individual message to clipboard
   const copyMessageToClipboard = async (content: string, index: number) => {
@@ -220,9 +239,35 @@ const sendMessage = async () => {
   return (
     <div className="h-screen w-full flex flex-col bg-white">
       {/* Header */}
-      <header className="flex items-center justify-center w-full p-4 bg-white shadow-md">
-        <img src="/icon.png" alt="Icon" className="h-12 w-12 sm:h-16 sm:w-16" />
-        <h2 className="text-xl sm:text-2xl font-bold ml-2">Grenada AI Assistant</h2>
+      <header className="flex items-center justify-between w-full px-4 py-3 bg-white shadow-md">
+        <div className="flex items-center space-x-3">
+          <img
+            src="/icon.png"
+            alt="GEA"
+            className="h-10 w-10 sm:h-12 sm:w-12 rounded"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+              Grenada AI Assistant
+            </h2>
+            {hasContext && (
+              <p className="text-xs text-gray-500">
+                {getContextSummary()}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Context indicator */}
+        {hasContext && (
+          <div className="flex items-center space-x-2">
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+              <span className="w-2 h-2 mr-1 bg-green-500 rounded-full animate-pulse"></span>
+              Connected
+            </span>
+          </div>
+        )}
       </header>
 
       {/* Chat Container */}
@@ -567,9 +612,8 @@ const sendMessage = async () => {
             className="flex-1 bg-white hover:bg-red-50 border-2 border-gray-300 hover:border-red-400 text-gray-700 hover:text-red-600 px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
             onClick={() => {
               setMessages([]);
-              setThreadId(null);
+              clearThreadId();
               setShowWelcome(true);
-              localStorage.removeItem("threadId");
               localStorage.removeItem("chatHistory");
             }}
             disabled={messages.length === 0}

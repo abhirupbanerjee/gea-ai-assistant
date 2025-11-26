@@ -1,0 +1,17 @@
+{
+  "name": "get_page_context",
+  "description": "Get detailed static information about a specific page in the GEA Portal. Use this function when the user asks what they can do on the current page, needs help with a form or process, asks how to complete a task, seems confused about where they are, or when you need to provide step-by-step guidance. The function returns page title, purpose, target audience (public/staff/admin), step-by-step instructions (if applicable), helpful tips and warnings, and available features. Always use this function to provide accurate, page-specific guidance rather than generic responses.",
+  "strict": false,
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "route": {
+        "type": "string",
+        "description": "The page route/path from the GEA Portal (e.g. '/feedback', '/admin/analytics', '/grievance', '/ticket-status', '/admin/master/entities')"
+      }
+    },
+    "required": [
+      "route"
+    ]
+  }
+}

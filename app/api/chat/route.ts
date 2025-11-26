@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message, threadId, sourceUrl } = await request.json();
+    const { message, threadId, sourceUrl, contextDescription } = await request.json();
 
     if (!message || message.trim() === '') {
       return NextResponse.json(
@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
     console.log('Chat request:', {
       messageLength: message.length,
       hasThread: !!threadId,
-      sourceUrl: sourceUrl || 'none'
+      sourceUrl: sourceUrl || 'none',
+      hasContext: !!contextDescription
     });
 
     const headers: Record<string, string> = {
@@ -100,8 +101,12 @@ export async function POST(request: NextRequest) {
         tools: getFunctionDefinitions(),
       };
 
-      // Add additional instructions if sourceUrl is provided
-      if (sourceUrl) {
+      // Add additional instructions with context
+      if (contextDescription) {
+        // Full context description from postMessage
+        runBody.additional_instructions = `## CURRENT USER CONTEXT\n\n${contextDescription}\n\n---\n\nUse this context to provide relevant, specific assistance.\nIf a modal is open, focus on that item.\nIf user is editing, help with the editable fields.\nIf on a specific tab, focus on that tab's content.\nIf in a form, guide through remaining steps.\n\nYou can also use the get_page_context function to get detailed page information if needed.`;
+      } else if (sourceUrl) {
+        // Fallback: just the route
         runBody.additional_instructions = `The user is currently viewing this page: ${sourceUrl}\n\nIf the user asks about the current page, what they can do, or needs help with a task, use the get_page_context function with this route to provide accurate, page-specific guidance.`;
       }
 
