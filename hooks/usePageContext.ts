@@ -158,6 +158,30 @@ export function usePageContext() {
 
     const parts: string[] = [];
 
+    // User Context
+    if (pageContext.user) {
+      const user = pageContext.user;
+      let userDesc = 'User information:';
+
+      if (user.name) {
+        userDesc += `\n  - Name: ${user.name}`;
+      }
+
+      if (user.email) {
+        userDesc += `\n  - Email: ${user.email}`;
+      }
+
+      userDesc += `\n  - Role: ${user.role}`;
+
+      if (user.entity) {
+        userDesc += `\n  - Entity: ${user.entity.name} (ID: ${user.entity.id})`;
+      }
+
+      userDesc += `\n  - Authenticated: ${user.isAuthenticated}`;
+
+      parts.push(userDesc);
+    }
+
     // Route
     parts.push(`Current page: ${pageContext.route}`);
 

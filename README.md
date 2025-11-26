@@ -10,6 +10,7 @@ A context-aware AI assistant (EA Portal Bot) for the Grenada Enterprise Architec
 
 ### Context-Aware Intelligence
 - **Real-time Context Tracking**: Receives postMessage from GEA Portal to understand user's current page, modal, edit state, tab, and form progress
+- **User-Aware Responses**: Detects user role (public/staff/admin) and entity to provide personalized guidance
 - **Dynamic Responses**: Provides specific, actionable guidance based on what the user is viewing or doing
 - **Thread Persistence**: Conversations persist across page refreshes via localStorage
 
@@ -27,11 +28,13 @@ A context-aware AI assistant (EA Portal Bot) for the Grenada Enterprise Architec
 ### Document Knowledge
 - **Enterprise Architecture**: Comprehensive knowledge of Grenada's EA framework, maturity model, and policy
 - **DTA Information**: Details about Digital Transformation Agency structure, services, and implementation
+- **Role-Based User Manuals**: Citizen, Staff, and Admin manuals accessed based on user role
 - **Function Calling**: Fetches static page information from GEA Portal API on demand
 
 ### Modern UI Features
-- **Resizable Chat Window**: 4 size modes (compact, normal, wide, full) with localStorage persistence
-- **Icon-only Action Buttons**: Compact copy and clear buttons with tooltips for space efficiency
+- **Multi-line Text Input**: Textarea with 3 rows for longer questions (Enter to send, Shift+Enter for new line)
+- **Optimized Button Layout**: Icon-only buttons with 25%-25%-50% width distribution (Copy, Clear, Send)
+- **Icon-only Buttons**: All action buttons use icons with helpful tooltips on hover
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 - **Smooth Animations**: Framer Motion for elegant transitions and interactions
 
@@ -201,10 +204,12 @@ See [`docs/FUNCTION_CALLING_GUIDE.md`](docs/FUNCTION_CALLING_GUIDE.md) for detai
 ### Setup & Configuration
 - **[Quick Start Guide](docs/QUICK_START.md)** - Fast deployment checklist
 - **[OpenAI Setup Guide](docs/OPENAI_SETUP_GUIDE.md)** - Complete OpenAI Assistant configuration
+- **[Manual Upload Guide](docs/OPENAI_MANUAL_UPLOAD_STEPS.md)** - Upload user manuals and test role-aware responses
 - **[Environment Variables](.env.example)** - Configuration template
 
 ### Technical Documentation
 - **[Implementation Summary](docs/IMPLEMENTATION_SUMMARY_V2.md)** - Complete feature list and changes
+- **[User Context Integration](docs/USER_CONTEXT_INTEGRATION_SUMMARY.md)** - User role detection and personalization
 - **[Function Calling Guide](docs/FUNCTION_CALLING_GUIDE.md)** - Function calling architecture and examples
 - **[System Prompt](docs/OPENAI_SYSTEM_PROMPT_FINAL.md)** - OpenAI Assistant instructions
 - **[Function Definition](docs/OPENAI_FUNCTION_DEFINITION.json)** - OpenAI function schema

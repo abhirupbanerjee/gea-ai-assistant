@@ -75,6 +75,30 @@ export interface FormContext {
 }
 
 // ============================================================================
+// User Context
+// ============================================================================
+
+export interface UserContext {
+  /** User ID */
+  id?: string;
+  /** User's full name */
+  name?: string;
+  /** User's email */
+  email?: string;
+  /** User role: 'admin', 'staff', or 'public' */
+  role: 'admin' | 'staff' | 'public';
+  /** User role display name */
+  roleName?: string;
+  /** User's entity (for staff and admin) */
+  entity?: {
+    id: number;
+    name: string;
+  };
+  /** Whether user is authenticated */
+  isAuthenticated: boolean;
+}
+
+// ============================================================================
 // Full Page Context
 // ============================================================================
 
@@ -83,6 +107,9 @@ export interface PageContext {
   route: string;
   pageTitle?: string;
   pageDescription?: string;
+
+  // User Context
+  user?: UserContext | null;
 
   // UI State
   modal?: ModalContext | null;

@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import remarkGfm from "remark-gfm";
-import { User, Bot, Copy, Check, ExternalLink, Send, Trash2, ClipboardCopy, Maximize2, Minimize2 } from "lucide-react";
+import { User, Bot, Copy, Check, ExternalLink, Send, Trash2, ClipboardCopy } from "lucide-react";
 import { usePageContext } from "@/hooks/usePageContext";
 
 // Define Message type
@@ -14,9 +14,6 @@ interface Message {
   content: string;
   timestamp?: string;
 }
-
-// Define size modes
-type SizeMode = 'compact' | 'normal' | 'wide' | 'full';
 
 // Main ChatApp component
 const ChatApp = () => {
@@ -28,7 +25,6 @@ const ChatApp = () => {
   const [typing, setTyping] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
-  const [sizeMode, setSizeMode] = useState<SizeMode>('normal');
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Page Context Hook
@@ -55,19 +51,6 @@ const ChatApp = () => {
       }]);
     }
   }, [errorMessage]);
-
-  // Load size mode from localStorage on mount
-  useEffect(() => {
-    const savedSizeMode = localStorage.getItem("chatSizeMode") as SizeMode;
-    if (savedSizeMode && ['compact', 'normal', 'wide', 'full'].includes(savedSizeMode)) {
-      setSizeMode(savedSizeMode);
-    }
-  }, []);
-
-  // Save size mode to localStorage when changed
-  useEffect(() => {
-    localStorage.setItem("chatSizeMode", sizeMode);
-  }, [sizeMode]);
 
   // Welcome message based on context (only if no error)
   useEffect(() => {
@@ -253,25 +236,6 @@ const ChatApp = () => {
     }
   };
 
-  // Toggle size mode
-  const toggleSizeMode = () => {
-    const modes: SizeMode[] = ['compact', 'normal', 'wide', 'full'];
-    const currentIndex = modes.indexOf(sizeMode);
-    const nextIndex = (currentIndex + 1) % modes.length;
-    setSizeMode(modes[nextIndex]);
-  };
-
-  // Get max-width class based on size mode
-  const getWidthClass = () => {
-    switch (sizeMode) {
-      case 'compact': return 'max-w-3xl';
-      case 'normal': return 'max-w-4xl';
-      case 'wide': return 'max-w-6xl';
-      case 'full': return 'max-w-full px-4';
-      default: return 'max-w-4xl';
-    }
-  };
-
   return (
     <div className="h-screen w-full flex flex-col bg-white">
       {/* Header */}
@@ -295,36 +259,17 @@ const ChatApp = () => {
           </div>
         </div>
 
-        {/* Right side controls */}
-        <div className="flex items-center gap-3">
-          {/* Size toggle button */}
-          <button
-            onClick={toggleSizeMode}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors group relative"
-            aria-label="Toggle chat size"
-          >
-            {sizeMode === 'full' ? (
-              <Minimize2 className="w-5 h-5 text-gray-600" />
-            ) : (
-              <Maximize2 className="w-5 h-5 text-gray-600" />
-            )}
-            <span className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Size: {sizeMode}
-            </span>
-          </button>
-
-          {/* Context indicator */}
-          {hasContext && (
-            <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
-              <span className="w-2 h-2 mr-1 bg-green-500 rounded-full animate-pulse"></span>
-              Connected
-            </span>
-          )}
-        </div>
+        {/* Context indicator */}
+        {hasContext && (
+          <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+            <span className="w-2 h-2 mr-1 bg-green-500 rounded-full animate-pulse"></span>
+            Connected
+          </span>
+        )}
       </header>
 
       {/* Chat Container */}
-      <div className={`flex-1 w-full ${getWidthClass()} mx-auto flex flex-col p-4 overflow-hidden`}>
+      <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 overflow-hidden">
         <div
           ref={chatContainerRef}
           className="flex-1 overflow-y-auto border p-3 bg-white shadow rounded-lg"
@@ -603,40 +548,28 @@ const ChatApp = () => {
       </div>
 
       {/* Input & Controls */}
-      <div className={`w-full ${getWidthClass()} mx-auto p-4 flex flex-col gap-3`}>
-        {/* Input Row */}
-        <div className="flex flex-col sm:flex-row items-stretch gap-2">
-          <input
-            className="flex-1 border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg px-4 py-3 outline-none transition-all"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !loading && sendMessage()}
-            placeholder="Type your question here..."
-            disabled={loading}
-          />
-          <button
-            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md sm:min-w-[120px]"
-            onClick={sendMessage}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <span className="animate-spin">⏳</span>
-                <span>Sending...</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4" />
-                <span>Send</span>
-              </>
-            )}
-          </button>
-        </div>
+      <div className="w-full max-w-4xl mx-auto p-4 flex flex-col gap-3">
+        {/* Textarea Input */}
+        <textarea
+          className="w-full border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg px-4 py-3 outline-none transition-all resize-none"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey && !loading) {
+              e.preventDefault();
+              sendMessage();
+            }
+          }}
+          placeholder="Type your question here... (Shift+Enter for new line)"
+          disabled={loading}
+          rows={3}
+        />
 
-        {/* Action Buttons Row - Icon Only */}
-        <div className="flex justify-end gap-2">
+        {/* Action Buttons Row - 25% Copy, 25% Clear, 50% Send */}
+        <div className="flex gap-2">
+          {/* Copy Button - 25% */}
           <button
-            className="group relative p-2.5 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group relative flex-1 p-3 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             onClick={copyChatToClipboard}
             disabled={messages.length === 0}
             aria-label="Copy chat"
@@ -646,8 +579,10 @@ const ChatApp = () => {
               Copy Chat
             </span>
           </button>
+
+          {/* Clear Button - 25% */}
           <button
-            className="group relative p-2.5 bg-white hover:bg-red-50 border-2 border-gray-300 hover:border-red-400 text-gray-700 hover:text-red-600 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group relative flex-1 p-3 bg-white hover:bg-red-50 border-2 border-gray-300 hover:border-red-400 text-gray-700 hover:text-red-600 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             onClick={() => {
               setMessages([]);
               clearThreadId();
@@ -660,6 +595,23 @@ const ChatApp = () => {
             <Trash2 className="w-5 h-5" />
             <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               Clear Chat
+            </span>
+          </button>
+
+          {/* Send Button - 50% */}
+          <button
+            className="group relative flex-[2] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white p-3 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+            onClick={sendMessage}
+            disabled={loading}
+            aria-label="Send message"
+          >
+            {loading ? (
+              <span className="animate-spin">⏳</span>
+            ) : (
+              <Send className="w-5 h-5" />
+            )}
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              {loading ? "Sending..." : "Send Message"}
             </span>
           </button>
         </div>
