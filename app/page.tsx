@@ -55,7 +55,7 @@ const ChatApp = () => {
   // Welcome message based on context (only if no error)
   useEffect(() => {
     if (messages.length === 0 && !errorMessage) {
-      let welcomeMessage = "Hello! I'm the EA Portal Bot. How can I help you today?";
+      let welcomeMessage = "Hello! I'm the GEA Bot. How can I help you today?";
 
       if (hasContext && pageContext?.route) {
         const routeMessages: Record<string, string> = {
@@ -225,7 +225,7 @@ const ChatApp = () => {
   // Copy chat to clipboard
   const copyChatToClipboard = async () => {
     const chatText = messages
-      .map((msg) => `${msg.timestamp} - ${msg.role === "user" ? "You" : "EA Portal Bot"}:\n${msg.content}`)
+      .map((msg) => `${msg.timestamp} - ${msg.role === "user" ? "You" : "GEA Bot"}:\n${msg.content}`)
       .join("\n\n");
     try {
       await navigator.clipboard.writeText(chatText);
@@ -241,31 +241,21 @@ const ChatApp = () => {
       {/* Header */}
       <header className="flex items-center justify-between w-full px-4 py-3 bg-white shadow-md">
         <div className="flex items-center space-x-3">
-          <img
-            src="/icon.png"
-            alt="GEA"
-            className="h-10 w-10 sm:h-12 sm:w-12 rounded"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800">
-              EA Portal Bot
-            </h2>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+            GEA Bot
             {hasContext && (
-              <p className="text-xs text-gray-500">
-                {getContextSummary()}
-              </p>
+              <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                <span className="w-2 h-2 mr-1 bg-green-500 rounded-full animate-pulse"></span>
+                Connected
+              </span>
             )}
-          </div>
+          </h2>
+          {hasContext && (
+            <p className="text-xs text-gray-500">
+              {getContextSummary()}
+            </p>
+          )}
         </div>
-
-        {/* Context indicator */}
-        {hasContext && (
-          <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
-            <span className="w-2 h-2 mr-1 bg-green-500 rounded-full animate-pulse"></span>
-            Connected
-          </span>
-        )}
       </header>
 
       {/* Chat Container */}
@@ -293,7 +283,7 @@ const ChatApp = () => {
               {/* Welcome Message */}
               <div className="text-center max-w-2xl mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-                  Welcome to EA Portal Bot
+                  Welcome to GEA Bot
                 </h2>
                 <p className="text-gray-600 text-lg mb-6">
                   I'm here to help you navigate through the GEA Portal. Ask me about features, processes, or how to complete tasks on any page.
@@ -391,25 +381,17 @@ const ChatApp = () => {
             >
               {/* Message Header with Avatar */}
               <div className="flex items-center gap-2 mb-2">
-                {/* Avatar */}
-                <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    msg.role === "user"
-                      ? "bg-blue-500"
-                      : "bg-gradient-to-br from-green-500 to-emerald-600"
-                  }`}
-                >
-                  {msg.role === "user" ? (
+                {/* Avatar - only for user */}
+                {msg.role === "user" && (
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-500">
                     <User className="w-5 h-5 text-white" />
-                  ) : (
-                    <Bot className="w-5 h-5 text-white" />
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Name and Timestamp */}
                 <div className="flex-grow flex items-center justify-between">
                   <span className="font-semibold text-gray-900">
-                    {msg.role === "user" ? "You" : "EA Portal Bot"}
+                    {msg.role === "user" ? "You" : "GEA Bot"}
                   </span>
                   <div className="flex items-center gap-2">
                     {msg.timestamp && (
