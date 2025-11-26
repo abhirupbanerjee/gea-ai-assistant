@@ -1,6 +1,8 @@
 // app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { getFunctionDefinitions } from '@/lib/openai-functions';
+import { handleFunctionCall, formatFunctionResult } from '@/lib/function-handlers';
 
 // Server-side environment variables (no NEXT_PUBLIC_ prefix)
 const ASSISTANT_ID = process.env.OPENAI_ASSISTANT_ID;
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message, threadId } = await request.json();
+    const { message, threadId, sourceUrl } = await request.json();
 
     if (!message || message.trim() === '') {
       return NextResponse.json(
@@ -32,6 +34,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    console.log('Chat request:', {
+      messageLength: message.length,
+      hasThread: !!threadId,
+      sourceUrl: sourceUrl || 'none'
+    });
 
     const headers: Record<string, string> = {
       Authorization: `Bearer ${OPENAI_API_KEY}`,
@@ -82,13 +90,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create run
+    // Create run with function calling support
     console.log('Creating run...');
     let runId;
     try {
+      // Build run request body
+      const runBody: any = {
+        assistant_id: ASSISTANT_ID,
+        tools: getFunctionDefinitions(),
+      };
+
+      // Add additional instructions if sourceUrl is provided
+      if (sourceUrl) {
+        runBody.additional_instructions = `The user is currently viewing this page: ${sourceUrl}\n\nIf the user asks about the current page, what they can do, or needs help with a task, use the get_page_context function with this route to provide accurate, page-specific guidance.`;
+      }
+
       const runRes = await axios.post(
         `https://api.openai.com/v1/threads/${currentThreadId}/runs`,
-        { assistant_id: ASSISTANT_ID },
+        runBody,
         { headers }
       );
       runId = runRes.data.id;
@@ -101,32 +120,75 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Poll for completion
+    // Poll for completion with function calling support
     let status = 'in_progress';
     let retries = 0;
-    const maxRetries = 30;
+    const maxRetries = 60; // Increase timeout for function calls
 
-    while ((status === 'in_progress' || status === 'queued') && retries < maxRetries) {
+    while ((status === 'in_progress' || status === 'queued' || status === 'requires_action') && retries < maxRetries) {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       try {
         const statusRes = await axios.get(
           `https://api.openai.com/v1/threads/${currentThreadId}/runs/${runId}`,
           { headers }
         );
-        
-        status = statusRes.data.status;
+
+        const runData = statusRes.data;
+        status = runData.status;
         console.log(`Run status: ${status} (attempt ${retries + 1})`);
-        
-        if (status === 'failed') {
-          console.error('Run failed:', statusRes.data);
+
+        // Handle function calls
+        if (status === 'requires_action') {
+          const toolCalls = runData.required_action?.submit_tool_outputs?.tool_calls || [];
+          console.log(`Processing ${toolCalls.length} function call(s)`);
+
+          // Execute all function calls
+          const toolOutputs = await Promise.all(
+            toolCalls.map(async (toolCall: any) => {
+              const functionName = toolCall.function.name;
+              const functionArgs = JSON.parse(toolCall.function.arguments);
+
+              console.log(`Executing function: ${functionName}`, functionArgs);
+
+              // Execute the function
+              const result = await handleFunctionCall(functionName, functionArgs);
+              const output = formatFunctionResult(result);
+
+              console.log(`Function ${functionName} result:`, result.success ? 'success' : 'failed');
+
+              return {
+                tool_call_id: toolCall.id,
+                output,
+              };
+            })
+          );
+
+          // Submit tool outputs back to OpenAI
+          console.log('Submitting tool outputs...');
+          try {
+            await axios.post(
+              `https://api.openai.com/v1/threads/${currentThreadId}/runs/${runId}/submit_tool_outputs`,
+              { tool_outputs: toolOutputs },
+              { headers }
+            );
+            console.log('Tool outputs submitted successfully');
+          } catch (error: any) {
+            console.error('Failed to submit tool outputs:', error.response?.data || error.message);
+            status = 'failed';
+            break;
+          }
+        }
+
+        if (status === 'failed' || status === 'cancelled' || status === 'expired') {
+          console.error('Run failed:', runData.last_error || 'Unknown error');
           break;
         }
       } catch (error: any) {
         console.error('Status check failed:', error.response?.data || error.message);
         break;
       }
-      
+
       retries++;
     }
 

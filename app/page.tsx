@@ -25,7 +25,39 @@ const ChatApp = () => {
   const [typing, setTyping] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [sourceUrl, setSourceUrl] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Capture source URL from parent page on mount
+  useEffect(() => {
+    // Method 1: From URL parameter ?source=/feedback
+    const params = new URLSearchParams(window.location.search);
+    const source = params.get('source');
+
+    if (source) {
+      setSourceUrl(source);
+      console.log('[Chat] Source URL from parameter:', source);
+      return;
+    }
+
+    // Method 2: From referrer (when embedded in iframe)
+    if (document.referrer) {
+      try {
+        const referrerUrl = new URL(document.referrer);
+        // Only use referrer if it's from GEA Portal domains
+        if (
+          referrerUrl.hostname.includes('gea.abhirup.app') ||
+          referrerUrl.hostname.includes('gea.gov.gd') ||
+          referrerUrl.hostname === 'localhost'
+        ) {
+          setSourceUrl(referrerUrl.pathname);
+          console.log('[Chat] Source URL from referrer:', referrerUrl.pathname);
+        }
+      } catch (e) {
+        console.log('[Chat] Could not parse referrer');
+      }
+    }
+  }, []);
 
   // Load chat history from localStorage on component mount
   useEffect(() => {
@@ -97,6 +129,7 @@ const sendMessage = async () => {
       body: JSON.stringify({
         message: userInput,
         threadId: threadId,
+        sourceUrl: sourceUrl,
       }),
     });
 
