@@ -1,6 +1,6 @@
-# Grenada Enterprise Architecture (GEA) AI Assistant
+# EA Portal Bot - GEA AI Assistant
 
-A context-aware AI assistant for the Grenada Enterprise Architecture Portal, powered by OpenAI and built with Next.js 14. The assistant provides real-time, context-specific guidance for citizens, government staff, and administrators using the GEA Portal.
+A context-aware AI assistant (EA Portal Bot) for the Grenada Enterprise Architecture Portal, powered by OpenAI and built with Next.js 14. The bot provides real-time, context-specific guidance for citizens, government staff, and administrators using the GEA Portal.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/abhirupbanerjee/gea-ai-assistant)
 
@@ -19,10 +19,21 @@ A context-aware AI assistant for the Grenada Enterprise Architecture Portal, pow
 - **Edit Assistance**: Guides users through editing with field-specific help
 - **Form Guidance**: Walks users through multi-step forms with progress tracking
 
+### Dynamic Welcome Screen
+- **Context-Based Prompts**: Shows 3 quick action prompts relevant to the current page when embedded in portal
+- **Generic Prompts**: Displays common portal tasks (feedback, grievances, services) when used standalone
+- **Smart Navigation**: Automatically adapts prompts based on user's current location in the portal
+
 ### Document Knowledge
 - **Enterprise Architecture**: Comprehensive knowledge of Grenada's EA framework, maturity model, and policy
 - **DTA Information**: Details about Digital Transformation Agency structure, services, and implementation
 - **Function Calling**: Fetches static page information from GEA Portal API on demand
+
+### Modern UI Features
+- **Resizable Chat Window**: 4 size modes (compact, normal, wide, full) with localStorage persistence
+- **Icon-only Action Buttons**: Compact copy and clear buttons with tooltips for space efficiency
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Smooth Animations**: Framer Motion for elegant transitions and interactions
 
 ### Modern Stack
 - **Next.js 14**: App Router with TypeScript for type safety

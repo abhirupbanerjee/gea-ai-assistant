@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import remarkGfm from "remark-gfm";
-import { User, Bot, Copy, Check, ExternalLink, Send, Trash2, ClipboardCopy } from "lucide-react";
+import { User, Bot, Copy, Check, ExternalLink, Send, Trash2, ClipboardCopy, Maximize2, Minimize2 } from "lucide-react";
 import { usePageContext } from "@/hooks/usePageContext";
 
 // Define Message type
@@ -14,6 +14,9 @@ interface Message {
   content: string;
   timestamp?: string;
 }
+
+// Define size modes
+type SizeMode = 'compact' | 'normal' | 'wide' | 'full';
 
 // Main ChatApp component
 const ChatApp = () => {
@@ -25,6 +28,7 @@ const ChatApp = () => {
   const [typing, setTyping] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [sizeMode, setSizeMode] = useState<SizeMode>('normal');
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Page Context Hook
@@ -52,10 +56,23 @@ const ChatApp = () => {
     }
   }, [errorMessage]);
 
+  // Load size mode from localStorage on mount
+  useEffect(() => {
+    const savedSizeMode = localStorage.getItem("chatSizeMode") as SizeMode;
+    if (savedSizeMode && ['compact', 'normal', 'wide', 'full'].includes(savedSizeMode)) {
+      setSizeMode(savedSizeMode);
+    }
+  }, []);
+
+  // Save size mode to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem("chatSizeMode", sizeMode);
+  }, [sizeMode]);
+
   // Welcome message based on context (only if no error)
   useEffect(() => {
     if (messages.length === 0 && !errorMessage) {
-      let welcomeMessage = "Hello! I'm the Grenada AI Assistant. How can I help you today?";
+      let welcomeMessage = "Hello! I'm the EA Portal Bot. How can I help you today?";
 
       if (hasContext && pageContext?.route) {
         const routeMessages: Record<string, string> = {
@@ -225,7 +242,7 @@ const ChatApp = () => {
   // Copy chat to clipboard
   const copyChatToClipboard = async () => {
     const chatText = messages
-      .map((msg) => `${msg.timestamp} - ${msg.role === "user" ? "You" : "Grenada AI Assistant"}:\n${msg.content}`)
+      .map((msg) => `${msg.timestamp} - ${msg.role === "user" ? "You" : "EA Portal Bot"}:\n${msg.content}`)
       .join("\n\n");
     try {
       await navigator.clipboard.writeText(chatText);
@@ -233,6 +250,25 @@ const ChatApp = () => {
     } catch (err) {
       console.error("Failed to copy chat: ", err);
       alert("Failed to copy chat to clipboard.");
+    }
+  };
+
+  // Toggle size mode
+  const toggleSizeMode = () => {
+    const modes: SizeMode[] = ['compact', 'normal', 'wide', 'full'];
+    const currentIndex = modes.indexOf(sizeMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    setSizeMode(modes[nextIndex]);
+  };
+
+  // Get max-width class based on size mode
+  const getWidthClass = () => {
+    switch (sizeMode) {
+      case 'compact': return 'max-w-3xl';
+      case 'normal': return 'max-w-4xl';
+      case 'wide': return 'max-w-6xl';
+      case 'full': return 'max-w-full px-4';
+      default: return 'max-w-4xl';
     }
   };
 
@@ -249,7 +285,7 @@ const ChatApp = () => {
           />
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-gray-800">
-              Grenada AI Assistant
+              EA Portal Bot
             </h2>
             {hasContext && (
               <p className="text-xs text-gray-500">
@@ -259,19 +295,36 @@ const ChatApp = () => {
           </div>
         </div>
 
-        {/* Context indicator */}
-        {hasContext && (
-          <div className="flex items-center space-x-2">
+        {/* Right side controls */}
+        <div className="flex items-center gap-3">
+          {/* Size toggle button */}
+          <button
+            onClick={toggleSizeMode}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors group relative"
+            aria-label="Toggle chat size"
+          >
+            {sizeMode === 'full' ? (
+              <Minimize2 className="w-5 h-5 text-gray-600" />
+            ) : (
+              <Maximize2 className="w-5 h-5 text-gray-600" />
+            )}
+            <span className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Size: {sizeMode}
+            </span>
+          </button>
+
+          {/* Context indicator */}
+          {hasContext && (
             <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
               <span className="w-2 h-2 mr-1 bg-green-500 rounded-full animate-pulse"></span>
               Connected
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
       {/* Chat Container */}
-      <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 overflow-hidden">
+      <div className={`flex-1 w-full ${getWidthClass()} mx-auto flex flex-col p-4 overflow-hidden`}>
         <div
           ref={chatContainerRef}
           className="flex-1 overflow-y-auto border p-3 bg-white shadow rounded-lg"
@@ -295,103 +348,85 @@ const ChatApp = () => {
               {/* Welcome Message */}
               <div className="text-center max-w-2xl mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-                  Welcome to Grenada Enterprise Architecture AI Assistant
+                  Welcome to EA Portal Bot
                 </h2>
                 <p className="text-gray-600 text-lg mb-6">
-                  I can help you learn about Grenada's digital transformation journey
+                  I'm here to help you navigate through the GEA Portal. Ask me about features, processes, or how to complete tasks on any page.
                 </p>
               </div>
 
-              {/* Topic Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl mb-8">
-                {/* Enterprise Architecture Card */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-lg">EA</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">Enterprise Architecture</h3>
-                      <p className="text-gray-700 text-sm mt-1">
-                        Framework, maturity model, and EA policy
-                      </p>
-                    </div>
-                  </div>
+              {/* Context-based Quick Actions */}
+              {hasContext && pageContext?.route ? (
+                <div className="w-full max-w-2xl mb-8">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 text-center">
+                    Quick actions for this page
+                  </h3>
                   <div className="space-y-2">
                     <button
                       onClick={() => {
-                        setInput("Explain the Grenada Enterprise Architecture framework");
+                        setInput("What can I do on this page?");
                         setShowWelcome(false);
                       }}
-                      className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 rounded border border-blue-200 text-sm text-gray-800 transition-colors"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
-                      → Explain the EA framework
+                      <span className="font-medium">→ What can I do on this page?</span>
                     </button>
                     <button
                       onClick={() => {
-                        setInput("What is the eGovernment Maturity Model and its levels?");
+                        setInput("How do I complete the main task on this page?");
                         setShowWelcome(false);
                       }}
-                      className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 rounded border border-blue-200 text-sm text-gray-800 transition-colors"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
-                      → eGovernment Maturity Model
+                      <span className="font-medium">→ How do I complete the main task here?</span>
                     </button>
                     <button
                       onClick={() => {
-                        setInput("Explain the Grenada EA Policy in simple terms");
+                        setInput("Show me step-by-step instructions for this page");
                         setShowWelcome(false);
                       }}
-                      className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 rounded border border-blue-200 text-sm text-gray-800 transition-colors"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
-                      → EA Policy overview
+                      <span className="font-medium">→ Show me step-by-step instructions</span>
                     </button>
                   </div>
                 </div>
-
-                {/* DTA Card */}
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-sm">DTA</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">Digital Transformation Agency</h3>
-                      <p className="text-gray-700 text-sm mt-1">
-                        Structure, services, and implementation
-                      </p>
-                    </div>
-                  </div>
+              ) : (
+                <div className="w-full max-w-2xl mb-8">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 text-center">
+                    How can I help you?
+                  </h3>
                   <div className="space-y-2">
                     <button
                       onClick={() => {
-                        setInput("Explain the rationale for establishing DTA");
+                        setInput("How do I submit feedback?");
                         setShowWelcome(false);
                       }}
-                      className="w-full text-left px-3 py-2 bg-white hover:bg-emerald-50 rounded border border-emerald-200 text-sm text-gray-800 transition-colors"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
-                      → Why establish DTA?
+                      <span className="font-medium">→ How do I submit feedback?</span>
                     </button>
                     <button
                       onClick={() => {
-                        setInput("What is the organisation structure for DTA?");
+                        setInput("How do I file a grievance?");
                         setShowWelcome(false);
                       }}
-                      className="w-full text-left px-3 py-2 bg-white hover:bg-emerald-50 rounded border border-emerald-200 text-sm text-gray-800 transition-colors"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
-                      → DTA organisation structure
+                      <span className="font-medium">→ How do I file a grievance?</span>
                     </button>
                     <button
                       onClick={() => {
-                        setInput("What are the key services proposed to be delivered by DTA?");
+                        setInput("What services are available on the portal?");
                         setShowWelcome(false);
                       }}
-                      className="w-full text-left px-3 py-2 bg-white hover:bg-emerald-50 rounded border border-emerald-200 text-sm text-gray-800 transition-colors"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
-                      → Key DTA services
+                      <span className="font-medium">→ What services are available?</span>
                     </button>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Or Start Typing */}
               <p className="text-gray-500 text-sm">
@@ -429,7 +464,7 @@ const ChatApp = () => {
                 {/* Name and Timestamp */}
                 <div className="flex-grow flex items-center justify-between">
                   <span className="font-semibold text-gray-900">
-                    {msg.role === "user" ? "You" : "Grenada AI Assistant"}
+                    {msg.role === "user" ? "You" : "EA Portal Bot"}
                   </span>
                   <div className="flex items-center gap-2">
                     {msg.timestamp && (
@@ -568,7 +603,7 @@ const ChatApp = () => {
       </div>
 
       {/* Input & Controls */}
-      <div className="w-full max-w-4xl mx-auto p-4 flex flex-col gap-3">
+      <div className={`w-full ${getWidthClass()} mx-auto p-4 flex flex-col gap-3`}>
         {/* Input Row */}
         <div className="flex flex-col sm:flex-row items-stretch gap-2">
           <input
@@ -598,18 +633,21 @@ const ChatApp = () => {
           </button>
         </div>
 
-        {/* Action Buttons Row */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        {/* Action Buttons Row - Icon Only */}
+        <div className="flex justify-end gap-2">
           <button
-            className="flex-1 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
+            className="group relative p-2.5 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={copyChatToClipboard}
             disabled={messages.length === 0}
+            aria-label="Copy chat"
           >
-            <ClipboardCopy className="w-4 h-4" />
-            <span>Copy Chat</span>
+            <ClipboardCopy className="w-5 h-5" />
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Copy Chat
+            </span>
           </button>
           <button
-            className="flex-1 bg-white hover:bg-red-50 border-2 border-gray-300 hover:border-red-400 text-gray-700 hover:text-red-600 px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
+            className="group relative p-2.5 bg-white hover:bg-red-50 border-2 border-gray-300 hover:border-red-400 text-gray-700 hover:text-red-600 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => {
               setMessages([]);
               clearThreadId();
@@ -617,9 +655,12 @@ const ChatApp = () => {
               localStorage.removeItem("chatHistory");
             }}
             disabled={messages.length === 0}
+            aria-label="Clear chat"
           >
-            <Trash2 className="w-4 h-4" />
-            <span>Clear Chat</span>
+            <Trash2 className="w-5 h-5" />
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Clear Chat
+            </span>
           </button>
         </div>
       </div>
