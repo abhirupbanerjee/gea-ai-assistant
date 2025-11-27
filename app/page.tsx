@@ -5,8 +5,12 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import remarkGfm from "remark-gfm";
-import { User, Bot, Copy, Check, ExternalLink, Send, Trash2, ClipboardCopy } from "lucide-react";
+import { User, Bot, Copy, Check, ExternalLink, Send, Trash2, ClipboardCopy, X, Minimize2 } from "lucide-react";
 import { usePageContext } from "@/hooks/usePageContext";
+import Image from "next/image";
+
+// Utility function for conditional class names
+const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
 // Define Message type
 interface Message {
@@ -237,34 +241,91 @@ const ChatApp = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-white">
+    <div className={cn(
+      "h-screen w-full flex flex-col",
+      isEmbedded ? "bg-gradient-to-br from-gray-50 to-white" : "bg-white"
+    )}>
       {/* Header */}
-      <header className="flex items-center justify-between w-full px-4 py-3 bg-white shadow-md">
-        <div className="flex items-center space-x-3">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
-            GEA Bot
+      <header className={cn(
+        "flex items-center justify-between w-full shadow-lg transition-all",
+        isEmbedded
+          ? "px-3 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 rounded-t-xl"
+          : "px-4 py-3 bg-white shadow-md"
+      )}>
+        <div className="flex items-center gap-2.5">
+          {/* Logo Icon */}
+          <Image
+            src="/icon.png"
+            alt="GEA"
+            width={isEmbedded ? 28 : 36}
+            height={isEmbedded ? 28 : 36}
+            className="flex-shrink-0"
+          />
+
+          {/* Title and Status */}
+          <div className="flex flex-col">
+            <h2 className={cn(
+              "font-bold flex items-center gap-2",
+              isEmbedded ? "text-base text-white" : "text-lg sm:text-xl text-gray-800"
+            )}>
+              GEA Bot
+              {hasContext && (
+                <span className={cn(
+                  "inline-flex items-center px-2 py-1 text-xs font-medium rounded-full",
+                  isEmbedded
+                    ? "bg-white/20 text-white backdrop-blur-sm"
+                    : "bg-green-100 text-green-700"
+                )}>
+                  <span className={cn(
+                    "w-2 h-2 mr-1 rounded-full animate-pulse",
+                    isEmbedded ? "bg-green-300" : "bg-green-500"
+                  )}></span>
+                  Connected
+                </span>
+              )}
+            </h2>
             {hasContext && (
-              <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
-                <span className="w-2 h-2 mr-1 bg-green-500 rounded-full animate-pulse"></span>
-                Connected
-              </span>
+              <p className={cn(
+                "text-xs",
+                isEmbedded ? "text-blue-100" : "text-gray-500"
+              )}>
+                {getContextSummary()}
+              </p>
             )}
-          </h2>
-          {hasContext && (
-            <p className="text-xs text-gray-500">
-              {getContextSummary()}
-            </p>
-          )}
+          </div>
         </div>
+
+        {/* Close button for embedded mode */}
+        {isEmbedded && (
+          <button
+            onClick={() => window.parent.postMessage({ type: 'CLOSE_BOT' }, '*')}
+            className="p-1.5 hover:bg-white/20 rounded-lg transition-all"
+            aria-label="Close assistant"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+        )}
       </header>
 
       {/* Chat Container */}
-      <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 overflow-hidden">
+      <div className={cn(
+        "flex-1 w-full flex flex-col overflow-hidden",
+        isEmbedded ? "p-3" : "p-4 max-w-4xl mx-auto"
+      )}>
         <div
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto border p-3 bg-white shadow rounded-lg"
+          className={cn(
+            "flex-1 overflow-y-auto border bg-white rounded-lg",
+            isEmbedded
+              ? "p-2.5 shadow-sm"
+              : "p-3 shadow"
+          )}
+          style={isEmbedded ? {
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#cbd5e1 #f1f5f9'
+          } : undefined}
         >
-          <div className="space-y-4">
+          <div className={cn("space-y-4", isEmbedded && "space-y-3")}>
           {/* Welcome Screen */}
           {showWelcome && messages.length === 0 && (
             <motion.div
@@ -415,11 +476,21 @@ const ChatApp = () => {
 
               {/* Message Content */}
               <div
-                className={`p-4 rounded-lg ${
+                className={cn(
+                  "rounded-lg ml-10 transition-all",
+                  isEmbedded ? "p-3" : "p-4",
                   msg.role === "user"
-                    ? "bg-blue-50 border border-blue-100 ml-10"
-                    : "bg-white border border-gray-200 shadow-sm ml-10"
-                }`}
+                    ? cn(
+                        "bg-blue-50 border border-blue-100",
+                        isEmbedded && "shadow-sm hover:shadow-md"
+                      )
+                    : cn(
+                        "bg-white border shadow-sm",
+                        isEmbedded
+                          ? "border-l-4 border-l-blue-400 border-gray-200 hover:shadow-md"
+                          : "border-gray-200"
+                      )
+                )}
               >
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
@@ -530,10 +601,18 @@ const ChatApp = () => {
       </div>
 
       {/* Input & Controls */}
-      <div className="w-full max-w-4xl mx-auto p-4 flex flex-col gap-3">
+      <div className={cn(
+        "w-full flex flex-col",
+        isEmbedded ? "p-3 gap-2" : "p-4 gap-3 max-w-4xl mx-auto"
+      )}>
         {/* Textarea Input */}
         <textarea
-          className="w-full border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg px-4 py-3 outline-none transition-all resize-none"
+          className={cn(
+            "w-full border border-gray-300 focus:border-blue-500 focus:ring-2 rounded-lg outline-none transition-all resize-none",
+            isEmbedded
+              ? "px-3 py-2.5 text-sm focus:ring-blue-500/50"
+              : "px-4 py-3 text-base focus:ring-blue-200 border-2"
+          )}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -544,19 +623,24 @@ const ChatApp = () => {
           }}
           placeholder="Type your question here... (Shift+Enter for new line)"
           disabled={loading}
-          rows={3}
+          rows={isEmbedded ? 2 : 3}
         />
 
         {/* Action Buttons Row - 25% Copy, 25% Clear, 50% Send */}
-        <div className="flex gap-2">
+        <div className={cn("flex", isEmbedded ? "gap-1.5" : "gap-2")}>
           {/* Copy Button - 25% */}
           <button
-            className="group relative flex-1 p-3 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 text-gray-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className={cn(
+              "group relative flex-1 bg-white hover:bg-gray-50 border text-gray-700 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center",
+              isEmbedded
+                ? "p-2 border-gray-300 hover:border-gray-400"
+                : "p-3 border-2 border-gray-300 hover:border-gray-400"
+            )}
             onClick={copyChatToClipboard}
             disabled={messages.length === 0}
             aria-label="Copy chat"
           >
-            <ClipboardCopy className="w-5 h-5" />
+            <ClipboardCopy className={isEmbedded ? "w-4 h-4" : "w-5 h-5"} />
             <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               Copy Chat
             </span>
@@ -564,7 +648,12 @@ const ChatApp = () => {
 
           {/* Clear Button - 25% */}
           <button
-            className="group relative flex-1 p-3 bg-white hover:bg-red-50 border-2 border-gray-300 hover:border-red-400 text-gray-700 hover:text-red-600 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className={cn(
+              "group relative flex-1 bg-white hover:bg-red-50 border text-gray-700 hover:text-red-600 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center",
+              isEmbedded
+                ? "p-2 border-gray-300 hover:border-red-400"
+                : "p-3 border-2 border-gray-300 hover:border-red-400"
+            )}
             onClick={() => {
               setMessages([]);
               clearThreadId();
@@ -574,7 +663,7 @@ const ChatApp = () => {
             disabled={messages.length === 0}
             aria-label="Clear chat"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className={isEmbedded ? "w-4 h-4" : "w-5 h-5"} />
             <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               Clear Chat
             </span>
@@ -582,7 +671,10 @@ const ChatApp = () => {
 
           {/* Send Button - 50% */}
           <button
-            className="group relative flex-[2] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white p-3 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+            className={cn(
+              "group relative flex-[2] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2",
+              isEmbedded ? "p-2" : "p-3"
+            )}
             onClick={sendMessage}
             disabled={loading}
             aria-label="Send message"
@@ -590,7 +682,7 @@ const ChatApp = () => {
             {loading ? (
               <span className="animate-spin">⏳</span>
             ) : (
-              <Send className="w-5 h-5" />
+              <Send className={isEmbedded ? "w-4 h-4" : "w-5 h-5"} />
             )}
             <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               {loading ? "Sending..." : "Send Message"}
