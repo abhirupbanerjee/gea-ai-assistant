@@ -243,74 +243,46 @@ const ChatApp = () => {
   return (
     <div className={cn(
       "h-screen w-full flex flex-col",
-      isEmbedded ? "bg-gradient-to-br from-gray-50 to-white" : "bg-white"
+      isEmbedded ? "bg-white" : "bg-white"
     )}>
-      {/* Header */}
-      <header className={cn(
-        "flex items-center justify-between w-full shadow-lg transition-all",
-        isEmbedded
-          ? "px-3 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 rounded-t-xl"
-          : "px-4 py-3 bg-white shadow-md"
-      )}>
-        <div className="flex items-center gap-2.5">
-          {/* Logo Icon */}
-          <Image
-            src="/icon.png"
-            alt="GEA"
-            width={isEmbedded ? 28 : 36}
-            height={isEmbedded ? 28 : 36}
-            className="flex-shrink-0"
-          />
+      {/* Header - Hidden in embedded mode as parent provides header */}
+      {!isEmbedded && (
+        <header className="flex items-center justify-between w-full px-4 py-3 bg-white shadow-md">
+          <div className="flex items-center gap-2.5">
+            {/* Logo Icon */}
+            <Image
+              src="/icon.png"
+              alt="GEA"
+              width={36}
+              height={36}
+              className="flex-shrink-0"
+            />
 
-          {/* Title and Status */}
-          <div className="flex flex-col">
-            <h2 className={cn(
-              "font-bold flex items-center gap-2",
-              isEmbedded ? "text-base text-white" : "text-lg sm:text-xl text-gray-800"
-            )}>
-              GEA Bot
+            {/* Title and Status */}
+            <div className="flex flex-col">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+                GEA Bot
+                {hasContext && (
+                  <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                    <span className="w-2 h-2 mr-1 bg-green-500 rounded-full animate-pulse"></span>
+                    Connected
+                  </span>
+                )}
+              </h2>
               {hasContext && (
-                <span className={cn(
-                  "inline-flex items-center px-2 py-1 text-xs font-medium rounded-full",
-                  isEmbedded
-                    ? "bg-white/20 text-white backdrop-blur-sm"
-                    : "bg-green-100 text-green-700"
-                )}>
-                  <span className={cn(
-                    "w-2 h-2 mr-1 rounded-full animate-pulse",
-                    isEmbedded ? "bg-green-300" : "bg-green-500"
-                  )}></span>
-                  Connected
-                </span>
+                <p className="text-xs text-gray-500">
+                  {getContextSummary()}
+                </p>
               )}
-            </h2>
-            {hasContext && (
-              <p className={cn(
-                "text-xs",
-                isEmbedded ? "text-blue-100" : "text-gray-500"
-              )}>
-                {getContextSummary()}
-              </p>
-            )}
+            </div>
           </div>
-        </div>
-
-        {/* Close button for embedded mode */}
-        {isEmbedded && (
-          <button
-            onClick={() => window.parent.postMessage({ type: 'CLOSE_BOT' }, '*')}
-            className="p-1.5 hover:bg-white/20 rounded-lg transition-all"
-            aria-label="Close assistant"
-          >
-            <X className="w-5 h-5 text-white" />
-          </button>
-        )}
-      </header>
+        </header>
+      )}
 
       {/* Chat Container */}
       <div className={cn(
         "flex-1 w-full flex flex-col overflow-hidden",
-        isEmbedded ? "p-3" : "p-4 max-w-4xl mx-auto"
+        isEmbedded ? "px-3 pb-3 pt-2" : "p-4 max-w-4xl mx-auto"
       )}>
         <div
           ref={chatContainerRef}
