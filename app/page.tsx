@@ -334,32 +334,35 @@ const ChatApp = () => {
                   </h3>
                   <div className="space-y-2">
                     <button
-                      onClick={() => {
-                        setInput("What can I do on this page?");
+                      onClick={async () => {
                         setShowWelcome(false);
-                        setTimeout(() => sendMessage(), 100);
+                        setInput("What can I do on this page?");
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        sendMessage();
                       }}
-                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <span className="font-medium">→ What can I do on this page?</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setInput("How do I complete the main task on this page?");
+                      onClick={async () => {
                         setShowWelcome(false);
-                        setTimeout(() => sendMessage(), 100);
+                        setInput("How do I complete the main task on this page?");
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        sendMessage();
                       }}
-                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <span className="font-medium">→ How do I complete the main task here?</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setInput("Show me step-by-step instructions for this page");
+                      onClick={async () => {
                         setShowWelcome(false);
-                        setTimeout(() => sendMessage(), 100);
+                        setInput("Show me step-by-step instructions for this page");
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        sendMessage();
                       }}
-                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <span className="font-medium">→ Show me step-by-step instructions</span>
                     </button>
@@ -372,32 +375,36 @@ const ChatApp = () => {
                   </h3>
                   <div className="space-y-2">
                     <button
-                      onClick={() => {
-                        setInput("Explain Grenada EA Framework");
+                      onClick={async () => {
                         setShowWelcome(false);
-                        setTimeout(() => sendMessage(), 100);
+                        setInput("Explain Grenada EA Framework");
+                        // Use setTimeout to ensure state is updated before sending
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        sendMessage();
                       }}
-                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <span className="font-medium">→ Explain Grenada EA Framework</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setInput("What is the role of DTA?");
+                      onClick={async () => {
                         setShowWelcome(false);
-                        setTimeout(() => sendMessage(), 100);
+                        setInput("What is the role of DTA?");
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        sendMessage();
                       }}
-                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <span className="font-medium">→ What is the role of DTA?</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setInput("Provide an overview of EA Portal");
+                      onClick={async () => {
                         setShowWelcome(false);
-                        setTimeout(() => sendMessage(), 100);
+                        setInput("Provide an overview of EA Portal");
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        sendMessage();
                       }}
-                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <span className="font-medium">→ Provide an overview of EA Portal</span>
                     </button>
@@ -410,32 +417,35 @@ const ChatApp = () => {
                   </h3>
                   <div className="space-y-2">
                     <button
-                      onClick={() => {
-                        setInput("How do I submit feedback?");
+                      onClick={async () => {
                         setShowWelcome(false);
-                        setTimeout(() => sendMessage(), 100);
+                        setInput("How do I submit feedback?");
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        sendMessage();
                       }}
-                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <span className="font-medium">→ How do I submit feedback?</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setInput("How do I file a grievance?");
+                      onClick={async () => {
                         setShowWelcome(false);
-                        setTimeout(() => sendMessage(), 100);
+                        setInput("How do I file a grievance?");
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        sendMessage();
                       }}
-                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <span className="font-medium">→ How do I file a grievance?</span>
                     </button>
                     <button
-                      onClick={() => {
-                        setInput("What services are available on the portal?");
+                      onClick={async () => {
                         setShowWelcome(false);
-                        setTimeout(() => sendMessage(), 100);
+                        setInput("What services are available on the portal?");
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        sendMessage();
                       }}
-                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
                     >
                       <span className="font-medium">→ What services are available?</span>
                     </button>
