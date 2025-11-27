@@ -72,6 +72,9 @@ const ChatApp = () => {
 
         welcomeMessage = routeMessages[pageContext.route] ||
           `I see you're on ${pageContext.route}. How can I help you with this page?`;
+      } else if (!isEmbedded) {
+        // Standalone mode welcome message
+        welcomeMessage = "Welcome to the GEA Bot! I'm your intelligent assistant for the Government of Grenada's Enterprise Architecture Portal. I can help you understand the EA framework, explain the role of the Digital Transformation Agency (DTA), and provide guidance on using the EA Portal.";
       }
 
       setMessages([{
@@ -81,7 +84,7 @@ const ChatApp = () => {
       }]);
       setShowWelcome(false); // Hide welcome screen after adding message
     }
-  }, [hasContext, pageContext?.route, errorMessage, messages.length]);
+  }, [hasContext, pageContext?.route, errorMessage, messages.length, isEmbedded]);
 
   // Load chat history from localStorage on component mount
   useEffect(() => {
@@ -334,6 +337,7 @@ const ChatApp = () => {
                       onClick={() => {
                         setInput("What can I do on this page?");
                         setShowWelcome(false);
+                        setTimeout(() => sendMessage(), 100);
                       }}
                       className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
@@ -343,6 +347,7 @@ const ChatApp = () => {
                       onClick={() => {
                         setInput("How do I complete the main task on this page?");
                         setShowWelcome(false);
+                        setTimeout(() => sendMessage(), 100);
                       }}
                       className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
@@ -352,10 +357,49 @@ const ChatApp = () => {
                       onClick={() => {
                         setInput("Show me step-by-step instructions for this page");
                         setShowWelcome(false);
+                        setTimeout(() => sendMessage(), 100);
                       }}
                       className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
                       <span className="font-medium">→ Show me step-by-step instructions</span>
+                    </button>
+                  </div>
+                </div>
+              ) : !isEmbedded ? (
+                <div className="w-full max-w-2xl mb-8">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 text-center">
+                    Get Started with These Topics
+                  </h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        setInput("Explain Grenada EA Framework");
+                        setShowWelcome(false);
+                        setTimeout(() => sendMessage(), 100);
+                      }}
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                    >
+                      <span className="font-medium">→ Explain Grenada EA Framework</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setInput("What is the role of DTA?");
+                        setShowWelcome(false);
+                        setTimeout(() => sendMessage(), 100);
+                      }}
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                    >
+                      <span className="font-medium">→ What is the role of DTA?</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setInput("Provide an overview of EA Portal");
+                        setShowWelcome(false);
+                        setTimeout(() => sendMessage(), 100);
+                      }}
+                      className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
+                    >
+                      <span className="font-medium">→ Provide an overview of EA Portal</span>
                     </button>
                   </div>
                 </div>
@@ -369,6 +413,7 @@ const ChatApp = () => {
                       onClick={() => {
                         setInput("How do I submit feedback?");
                         setShowWelcome(false);
+                        setTimeout(() => sendMessage(), 100);
                       }}
                       className="w-full text-left px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
@@ -378,6 +423,7 @@ const ChatApp = () => {
                       onClick={() => {
                         setInput("How do I file a grievance?");
                         setShowWelcome(false);
+                        setTimeout(() => sendMessage(), 100);
                       }}
                       className="w-full text-left px-4 py-3 bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 rounded-lg border border-emerald-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
@@ -387,6 +433,7 @@ const ChatApp = () => {
                       onClick={() => {
                         setInput("What services are available on the portal?");
                         setShowWelcome(false);
+                        setTimeout(() => sendMessage(), 100);
                       }}
                       className="w-full text-left px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 text-gray-800 transition-all shadow-sm hover:shadow-md"
                     >
