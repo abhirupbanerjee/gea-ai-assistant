@@ -59,6 +59,13 @@ const ChatApp = () => {
   // Welcome message based on context (only if no error)
   useEffect(() => {
     if (messages.length === 0 && !errorMessage) {
+      // For standalone mode, keep showWelcome true to display the welcome screen with buttons
+      if (!isEmbedded && !hasContext) {
+        setShowWelcome(true);
+        return;
+      }
+
+      // For embedded mode or when there's context, add welcome message to chat
       let welcomeMessage = "Hello! I'm the GEA Bot. How can I help you today?";
 
       if (hasContext && pageContext?.route) {
@@ -72,9 +79,9 @@ const ChatApp = () => {
 
         welcomeMessage = routeMessages[pageContext.route] ||
           `I see you're on ${pageContext.route}. How can I help you with this page?`;
-      } else if (!isEmbedded) {
-        // Standalone mode welcome message
-        welcomeMessage = "Welcome to the GEA Bot! I'm your intelligent assistant for the Government of Grenada's Enterprise Architecture Portal. I can help you understand the EA framework, explain the role of the Digital Transformation Agency (DTA), and provide guidance on using the EA Portal.";
+      } else if (isEmbedded) {
+        // Embedded mode without context
+        welcomeMessage = "Hello! I'm the GEA Bot. How can I help you today?";
       }
 
       setMessages([{
@@ -319,10 +326,13 @@ const ChatApp = () => {
               {/* Welcome Message */}
               <div className="text-center max-w-2xl mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-                  Welcome to GEA Bot
+                  {!isEmbedded && !hasContext ? "Welcome to GEA Bot" : "Welcome to GEA Bot"}
                 </h2>
                 <p className="text-gray-600 text-lg mb-6">
-                  I'm here to help you navigate through the GEA Portal. Ask me about features, processes, or how to complete tasks on any page.
+                  {!isEmbedded && !hasContext
+                    ? "I'm your intelligent assistant for the Government of Grenada's Enterprise Architecture Portal. I can help you understand the EA framework, explain the role of the Digital Transformation Agency (DTA), and provide guidance on using the EA Portal."
+                    : "I'm here to help you navigate through the GEA Portal. Ask me about features, processes, or how to complete tasks on any page."
+                  }
                 </p>
               </div>
 

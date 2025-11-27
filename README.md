@@ -2,8 +2,6 @@
 
 A context-aware AI assistant (EA Portal Bot) for the Grenada Enterprise Architecture Portal, powered by OpenAI and built with Next.js 14. The bot provides real-time, context-specific guidance for citizens, government staff, and administrators using the GEA Portal.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/abhirupbanerjee/gea-ai-assistant)
-
 ---
 
 ## 🌟 Features
